@@ -1,5 +1,14 @@
 package main
 
+import (
+	"bufio"
+	"fmt"
+	"log"
+	"os"
+	"strconv"
+	"strings"
+)
+
 type Grade string
 
 const (
@@ -21,7 +30,49 @@ type studentStat struct {
 }
 
 func parseCSV(filePath string) []student {
-	return nil
+	f, err := os.Open(filePath)
+	if err != nil {
+		log.Fatalln(err)
+	}
+
+	fileScanner := bufio.NewScanner(f)
+	// skip CSV header
+	fileScanner.Scan()
+
+	// TODO: dynamically input length of students slice
+	students := make([]student, 0, 30)
+	for fileScanner.Scan() {
+		row := fileScanner.Text()
+
+		// split row by commas
+		studentInfo := strings.Split(row, ",")
+		firstName, lastName, university := studentInfo[0], studentInfo[1], studentInfo[2]
+		// TODO: cleanup error handling here
+		test1Score, err := strconv.Atoi(studentInfo[3])
+		if err != nil {
+			fmt.Println(err)
+		}
+		test2Score, err := strconv.Atoi(studentInfo[4])
+		if err != nil {
+			fmt.Println(err)
+		}
+		test3Score, err := strconv.Atoi(studentInfo[5])
+		if err != nil {
+			fmt.Println(err)
+		}
+		test4Score, err := strconv.Atoi(studentInfo[6])
+		if err != nil {
+			fmt.Println(err)
+		}
+		student := student{firstName, lastName, university, test1Score, test2Score, test3Score, test4Score}
+		students = append(students, student)
+	}
+
+	if fileScanner.Err() != nil {
+		fmt.Println(fileScanner.Err().Error())
+	}
+
+	return students
 }
 
 func calculateGrade(students []student) []studentStat {
@@ -53,4 +104,8 @@ func findOverallTopper(gradedStudents []studentStat) studentStat {
 
 func findTopperPerUniversity(gs []studentStat) map[string]studentStat {
 	return nil
+}
+
+func main() {
+	parseCSV("grades.csv")
 }
