@@ -78,13 +78,13 @@ func parseCSV(filePath string) []student {
 func calculateGrade(students []student) []studentStat {
 	studentStats := make([]studentStat, 0, len(students))
 	for _, student := range students {
-		score := float32((student.test1Score + student.test2Score + student.test3Score + student.test4Score) / 4)
+		score := float32(student.test1Score+student.test2Score+student.test3Score+student.test4Score) / 4
 		var grade string
 		switch {
 		case score < 35:
 			grade = "F"
 		case score >= 35 && score < 50:
-			grade = "D"
+			grade = "C"
 		case score >= 50 && score < 70:
 			grade = "B"
 		case score >= 70:
@@ -99,11 +99,26 @@ func calculateGrade(students []student) []studentStat {
 }
 
 func findOverallTopper(gradedStudents []studentStat) studentStat {
-	return studentStat{}
+	var topper studentStat
+	var maxFinalScore float32 = 0.0
+	for _, studentStat := range gradedStudents {
+		if studentStat.finalScore > float32(maxFinalScore) {
+			maxFinalScore = studentStat.finalScore
+			topper = studentStat
+		}
+	}
+
+	return topper
 }
 
 func findTopperPerUniversity(gs []studentStat) map[string]studentStat {
-	return nil
+	toppers := make(map[string]studentStat)
+	for _, studentStat := range gs {
+		if studentStat.finalScore > toppers[studentStat.student.university].finalScore {
+			toppers[studentStat.student.university] = studentStat
+		}
+	}
+	return toppers
 }
 
 func main() {
