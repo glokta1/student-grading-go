@@ -29,17 +29,22 @@ type studentStat struct {
 	grade      Grade
 }
 
+func (s student) CalculateMeanScore() float32 {
+	return float32(s.test1Score+s.test2Score+s.test3Score+s.test4Score) / 4
+}
+
 func (s student) String() string {
 	return fmt.Sprintf("Name: %s %s\nUniversity: %s\nScores: [%d, %d, %d, %d]", s.firstName, s.lastName, s.university, s.test1Score, s.test2Score, s.test3Score, s.test4Score)
 }
 
 func parseCSV(filePath string) []student {
-	f, err := os.Open(filePath)
+	csvFile, err := os.Open(filePath)
 	if err != nil {
 		log.Fatalln(err)
 	}
 
-	fileScanner := bufio.NewScanner(f)
+	defer csvFile.Close()
+	fileScanner := bufio.NewScanner(csvFile)
 	// skip CSV header
 	fileScanner.Scan()
 
@@ -51,6 +56,7 @@ func parseCSV(filePath string) []student {
 		// split row by commas
 		studentInfo := strings.Split(row, ",")
 		firstName, lastName, university := studentInfo[0], studentInfo[1], studentInfo[2]
+
 		// TODO: cleanup error handling here
 		test1Score, err := strconv.Atoi(studentInfo[3])
 		if err != nil {
@@ -82,20 +88,20 @@ func parseCSV(filePath string) []student {
 func calculateGrade(students []student) []studentStat {
 	studentStats := make([]studentStat, 0, len(students))
 	for _, student := range students {
-		score := float32(student.test1Score+student.test2Score+student.test3Score+student.test4Score) / 4
+		meanScore := student.CalculateMeanScore()
 		var grade string
 		switch {
-		case score < 35:
+		case meanScore < 35:
 			grade = "F"
-		case score >= 35 && score < 50:
+		case meanScore >= 35 && meanScore < 50:
 			grade = "C"
-		case score >= 50 && score < 70:
+		case meanScore >= 50 && meanScore < 70:
 			grade = "B"
-		case score >= 70:
+		case meanScore >= 70:
 			grade = "A"
 		}
 
-		stat := studentStat{student, score, Grade(grade)}
+		stat := studentStat{student, meanScore, Grade(grade)}
 		studentStats = append(studentStats, stat)
 	}
 
@@ -116,12 +122,16 @@ func findOverallTopper(gradedStudents []studentStat) studentStat {
 }
 
 func findTopperPerUniversity(gs []studentStat) map[string]studentStat {
-	toppers := make(map[string]studentStat)
-	for _, studentStat := range gs {
-		if studentStat.finalScore > toppers[studentStat.student.university].finalScore {
-			toppers[studentStat.student.university] = studentStat
-		}
+	universities := make(map[string][]studentStat)
+	for _, stat := range gs {
+		universities[stat.student.university] = append(universities[stat.student.university], stat)
 	}
+
+	toppers := make(map[string]studentStat)
+	for uni, studentsFromUni := range universities {
+		toppers[uni] = findOverallTopper(studentsFromUni)
+	}
+
 	return toppers
 }
 
