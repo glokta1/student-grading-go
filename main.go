@@ -29,6 +29,10 @@ type studentStat struct {
 	grade      Grade
 }
 
+func (s student) String() string {
+	return fmt.Sprintf("Name: %s %s\nUniversity: %s\nScores: [%d, %d, %d, %d]", s.firstName, s.lastName, s.university, s.test1Score, s.test2Score, s.test3Score, s.test4Score)
+}
+
 func parseCSV(filePath string) []student {
 	f, err := os.Open(filePath)
 	if err != nil {
@@ -122,5 +126,6 @@ func findTopperPerUniversity(gs []studentStat) map[string]studentStat {
 }
 
 func main() {
-	parseCSV("grades.csv")
+	students := parseCSV("grades.csv")
+	fmt.Println(students[0])
 }
