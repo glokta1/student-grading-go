@@ -37,29 +37,35 @@ func (s student) String() string {
 	return fmt.Sprintf("Name: %s %s\nUniversity: %s\nScores: [%d, %d, %d, %d]", s.firstName, s.lastName, s.university, s.test1Score, s.test2Score, s.test3Score, s.test4Score)
 }
 
-func parseRowToStudent(row string) student {
+func parseRowToStudent(row string) (student, error) {
+
 	// split row by commas
 	studentInfo := strings.Split(row, ",")
+	if len(studentInfo) != 7 {
+		return student{}, nil
+	}
+
 	firstName, lastName, university := studentInfo[0], studentInfo[1], studentInfo[2]
 
 	// TODO: cleanup error handling here
 	test1Score, err := strconv.Atoi(studentInfo[3])
 	if err != nil {
-		fmt.Println(err)
+		return student{}, err
 	}
 	test2Score, err := strconv.Atoi(studentInfo[4])
 	if err != nil {
-		fmt.Println(err)
+		return student{}, err
 	}
 	test3Score, err := strconv.Atoi(studentInfo[5])
 	if err != nil {
-		fmt.Println(err)
+		return student{}, err
 	}
 	test4Score, err := strconv.Atoi(studentInfo[6])
 	if err != nil {
-		fmt.Println(err)
+		return student{}, err
 	}
-	return student{firstName, lastName, university, test1Score, test2Score, test3Score, test4Score}
+
+	return student{firstName, lastName, university, test1Score, test2Score, test3Score, test4Score}, nil
 }
 
 func parseCSV(filePath string) []student {
@@ -77,7 +83,13 @@ func parseCSV(filePath string) []student {
 	students := make([]student, 0, 30)
 	for fileScanner.Scan() {
 		row := fileScanner.Text()
-		students = append(students, parseRowToStudent(row))
+		student, err := parseRowToStudent(row)
+		if err != nil {
+			fmt.Println("Could not parse row: ", err)
+			continue
+		}
+
+		students = append(students, student)
 	}
 
 	if fileScanner.Err() != nil {
@@ -114,7 +126,7 @@ func findOverallTopper(gradedStudents []studentStat) studentStat {
 	var topper studentStat
 	var maxFinalScore float32 = 0.0
 	for _, studentStat := range gradedStudents {
-		if studentStat.finalScore > float32(maxFinalScore) {
+		if studentStat.finalScore > maxFinalScore {
 			maxFinalScore = studentStat.finalScore
 			topper = studentStat
 		}
